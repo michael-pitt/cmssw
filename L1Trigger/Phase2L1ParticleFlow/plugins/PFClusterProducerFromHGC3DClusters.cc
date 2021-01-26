@@ -54,6 +54,7 @@ l1tpf::PFClusterProducerFromHGC3DClusters::PFClusterProducerFromHGC3DClusters(co
   }
 
   produces<l1t::PFClusterCollection>();
+  produces<l1t::PFClusterCollection>("eg");
   if (hasEmId_) {
     produces<l1t::PFClusterCollection>("em");
     produces<l1t::PFClusterCollection>("had");
@@ -62,7 +63,9 @@ l1tpf::PFClusterProducerFromHGC3DClusters::PFClusterProducerFromHGC3DClusters(co
 
 void l1tpf::PFClusterProducerFromHGC3DClusters::produce(edm::Event &iEvent, const edm::EventSetup &) {
   auto out = std::make_unique<l1t::PFClusterCollection>();
+  auto outEG = std::make_unique<l1t::PFClusterCollection>();
   std::unique_ptr<l1t::PFClusterCollection> outEm, outHad;
+
   if (hasEmId_) {
     outEm.reset(new l1t::PFClusterCollection());
     outHad.reset(new l1t::PFClusterCollection());
@@ -81,7 +84,21 @@ void l1tpf::PFClusterProducerFromHGC3DClusters::produce(edm::Event &iEvent, cons
     }
     if (pt <= etCut_)
       continue;
-
+	
+	// 4 EGID, 5 Pion, 6 PionPU, 7 PU, 8 all
+	l1t::PFCluster eg(
+          it->iPt(l1t::HGCalMulticluster::EnergyInterpretation::EM), it->eta(), it->phi(), hoe, true);
+    eg.addConstituent(edm::Ptr<l1t::L1Candidate>(multiclusters, multiclusters->key(it)));
+    eg.setPdgId(8);  
+	outEG->push_back(eg);
+	
+	if (it->hwQual()) {
+		eg.setPdgId(4);  
+		outEG->push_back(eg);
+	}
+	
+	
+	
     if (it->hwQual()) {  // this is the EG ID shipped with the HGC TPs
       // we use the EM interpretation of the cluster energy
       l1t::PFCluster egcluster(
@@ -94,6 +111,21 @@ void l1tpf::PFClusterProducerFromHGC3DClusters::produce(edm::Event &iEvent, cons
     }
 
     l1t::PFCluster cluster(pt, it->eta(), it->phi(), hoe, /*isEM=*/isEM);
+	
+	if (!emVsPionID_.method().empty() && emVsPionID_.passID(*it, cluster)) {
+		eg.setPdgId(5);  
+		outEG->push_back(eg);
+		
+		if (!emVsPUID_.method().empty() && emVsPUID_.passID(*it, cluster)) {
+			eg.setPdgId(6);  
+			outEG->push_back(eg);
+		}	
+	}
+	if (!emVsPUID_.method().empty() && emVsPUID_.passID(*it, cluster)) {
+			eg.setPdgId(7);  
+			outEG->push_back(eg);
+	}
+	
     if (!emVsPUID_.method().empty()) {
       if (!emVsPUID_.passID(*it, cluster)) {
         continue;
@@ -115,6 +147,7 @@ void l1tpf::PFClusterProducerFromHGC3DClusters::produce(edm::Event &iEvent, cons
   }
 
   iEvent.put(std::move(out));
+  iEvent.put(std::move(outEG), "eg");
   if (hasEmId_) {
     iEvent.put(std::move(outEm), "em");
     iEvent.put(std::move(outHad), "had");

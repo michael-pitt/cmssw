@@ -1,5 +1,6 @@
 <use name="DataFormats/Math"/>
 <use name="FWCore/ParameterSet"/>
+<use   name="L1Trigger/Phase2L1ParticleFlow"/>
 <use   name="clhep"/>
 
 <export> 

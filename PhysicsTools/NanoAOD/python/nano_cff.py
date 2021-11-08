@@ -110,7 +110,7 @@ l1bits=cms.EDProducer("L1TriggerResultsConverter", src=cms.InputTag("gtStage2Dig
 nanoSequenceCommon = cms.Sequence(
         nanoMetadata + jetSequence + muonSequence + tauSequence + boostedTauSequence + electronSequence + lowPtElectronSequence + photonSequence+vertexSequence+
         isoTrackSequence + jetLepSequence + # must be after all the leptons
-        linkedObjects  +
+        linkedObjects  +  protonTables  +
         jetTables + muonTables + tauTables + boostedTauTables + electronTables + lowPtElectronTables + photonTables +  globalTables +vertexTables+ metTables+simpleCleanerTable + isoTrackTables
         )
 #remove boosted tau from previous eras
@@ -118,7 +118,7 @@ nanoSequenceCommon = cms.Sequence(
 
 nanoSequenceOnlyFullSim = cms.Sequence(triggerObjectTables + l1bits)
 
-nanoSequenceOnlyData = cms.Sequence(protonTables + lhcInfoTable)
+nanoSequenceOnlyData = cms.Sequence(lhcInfoTable)
 
 nanoSequence = cms.Sequence(nanoSequenceCommon + nanoSequenceOnlyData + nanoSequenceOnlyFullSim)
 

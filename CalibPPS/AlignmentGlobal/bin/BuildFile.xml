@@ -1,0 +1,8 @@
+<use name="root"/>
+<use name="CalibPPS/AlignmentGlobal"/>
+<use name="DataFormats/FWLite"/>
+<use name="DataFormats/CTPPSDetId"/>
+<environment>
+  <bin name="print_cuts"       file="print_cuts.cc"></bin>
+</environment>
+

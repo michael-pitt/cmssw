@@ -72,9 +72,14 @@ export TMPDIR=${TMPDIR:-${_CONDOR_SCRATCH_DIR:-/tmp}}
 #generate events
 ./runcmsgrid.sh $nevt $rnum $ncpu ${@:5}
 
-python gamma-UPC_lhe_ktsmearing_UPC.py cmsgrid_final.lhe
+# smear photon kT
+python3 ${CMSSW_BASE}/src/GeneratorInterface/LHEInterface/test/gamma-UPC_lhe_ktsmearing_UPC.py --file='cmsgrid_final.lhe' --out='cmsgrid_final.ktsmearing.lhe' --beams='p p'
 
-mv cmsgrid_final.lhe $LHEWORKDIR/
+cp cmsgrid_final.lhe ../../../
+cp cmsgrid_final.ktsmearing.lhe ../../../
+
+#mv cmsgrid_final.lhe $LHEWORKDIR/
+mv cmsgrid_final.ktsmearing.lhe $LHEWORKDIR/cmsgrid_final.lhe
 
 cd $LHEWORKDIR
 

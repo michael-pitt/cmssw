@@ -16,7 +16,7 @@ ion_Form=1 # Form1: Q**2=kT**2+(mn*x)**2, Qmin**2=(mn*x)**2;
 files=[arg for arg in sys.argv[1:] if arg.startswith('--file=')]
 nuclei=[arg for arg in sys.argv[1:] if arg.startswith('--beams=')]
 if not files or not nuclei:
-    raise Exception, "The usage of it should be e.g., ./lhe_ktsmearing_UPC --beams='Pb208 Pb208' --file='/PATH/TO/file.lhe' --out='ktsmearing.lhe4upc' "
+    raise Exception( "The usage of it should be e.g., ./lhe_ktsmearing_UPC --beams='Pb208 Pb208' --file='/PATH/TO/file.lhe' --out='ktsmearing.lhe4upc' ")
 files=files[0]
 files=files.replace('--file=','')
 #files=[file.lower() for file in files.split(' ')]
@@ -37,10 +37,10 @@ WoodsSaxon={'H2':(0.01,0.5882,0),'Li7':(1.77,0.327,0),'Be9':(1.791,0.611,0),'B10
                 'Nd142':(5.6135,0.5868,0.096),'Er166':(5.98,0.446,0.19),'W186':(6.58,0.480,0),'Au197':(6.38,0.535,0),'Pb207':(6.62,0.546,0),'Pb208':(6.624,0.549,0)}
 
 if nuclei[0] != 'p' and nuclei[0] not in WoodsSaxon.keys():
-    raise ValueError,'do not know the first beam type = %s'%nuclei[0]
+    raise ValueError('do not know the first beam type = %s'%nuclei[0])
 
 if nuclei[1] != 'p' and nuclei[1] not in WoodsSaxon.keys():
-    raise ValueError,'do not know the second beam type = %s'%nuclei[1]
+    raise ValueError('do not know the second beam type = %s'%nuclei[1])
 
 outfile=[arg for arg in sys.argv[1:] if arg.startswith('--out=')]
 if not outfile:
@@ -62,7 +62,7 @@ offset=100
 
 def generate_Q2_epa_proton(x,Q2max):
     if x >= 1.0 or x <= 0:
-        raise ValueError, "x >= 1 or x <= 0"
+        raise ValueError( "x >= 1 or x <= 0")
     mp=0.938272081 # proton mass in unit of GeV
     mupomuN=2.793
     Q02=0.71  # in unit of GeV**2
@@ -92,7 +92,7 @@ def generate_Q2_epa_proton(x,Q2max):
                        /(2*exp*(1+exp)**4*Q02*(4*mp2+exp*Q02))
         return funvalue
 
-    if p_x_array == None or (p_Q2max_save != Q2max):
+    if p_x_array is None or (p_Q2max_save != Q2max):
         # we need to generate the grid first
         p_Q2max_save = Q2max
         xmaxQ2max=xmaxvalue(Q2max)
@@ -145,9 +145,9 @@ A_fmax_interp=[None,None]
 # first beam: ibeam=0; second beam: ibeam=1
 def generate_Q2_epa_ion(ibeam,x,Q2max,RA,aA,wA):
     if x >= 1.0 or x <= 0:
-        raise ValueError, "x >= 1 or x <= 0"
+        raise ValueError( "x >= 1 or x <= 0")
     if ibeam not in [0,1]:
-        raise ValueError, "ibeam != 0,1"
+        raise ValueError( "ibeam != 0,1")
     mn=0.9315 # averaged nucleon mass in unit of GeV
     Q02=0.71
     mn2=mn**2
@@ -347,6 +347,7 @@ for i,file in enumerate(files):
     this_event=[]
     n_particles=0
     rwgtQ=False
+    mgrwtQ=False
     procid=None
     proc_dict={}
     for line in stream:
@@ -376,14 +377,14 @@ for i,file in enumerate(files):
                     E_beam1=float(ff[2])
                     E_beam2=float(ff[3])
                     if abs(PID_beam1) != 2212 or abs(PID_beam2) != 2212:
-                        raise ValueError, "Not a proton-proton collider"
+                        raise ValueError( "Not a proton-proton collider")
                     ninit1=int(sline.rsplit(' ',1)[-1])
                 else:
                     ninit1=ninit1+int(sline.rsplit(' ',1)[-1])
                     sline=sline.rsplit(' ',1)[0]
                     if not sline == firstinit:
-                        raise Exception, "the beam information of the LHE files is not identical"
-            elif iinit >= 2:
+                        raise Exception( "the beam information of the LHE files is not identical")
+            elif iinit == 2:
                 procid=sline.split()[-1]
                 procpos=sline.index(' '+procid)
                 ilil=ilil+1
@@ -393,8 +394,13 @@ for i,file in enumerate(files):
                     inits.append(sline)
                 else:
                     inits.insert(-1,sline)
+            elif iinit >= 3:
+                if i == 0:
+                    inits.append(sline)
+                else:
+                    inits.insert(-1,sline)
             else:
-                raise Exception, "should not reach here. Do not understand the <init> block"
+                raise Exception( "should not reach here. Do not understand the <init> block")
         elif "<event>" in line or "<event " in line:
             eventQ=True
             ievent=ievent+1
@@ -403,6 +409,7 @@ for i,file in enumerate(files):
             nevent=nevent+1
             eventQ=False
             rwgtQ=False
+            mgrwtQ=False
             ievent=-1
             this_event=[]
             n_particles=0
@@ -418,7 +425,7 @@ for i,file in enumerate(files):
                     found=True
                     sline=sline[:procpos]+(' %d'%(new_procid))+sline[procpos+len(' '+procid):]
                     break
-                if not found: raise Exception, "do not find the correct proc id !"
+                if not found: raise Exception( "do not find the correct proc id !")
                 n_particles=int(sline.split()[0])
                 #procpos=sline.index(' '+procid)
                 #sline=sline[:procpos]+(' %d'%(1+i))+sline[procpos+len(' '+procid):]
@@ -426,7 +433,11 @@ for i,file in enumerate(files):
                 rwgtQ=True
             elif "</rwgt" in sline:
                 rwgtQ=False
-            elif not rwgtQ:
+            elif "<mgrwt" in sline:
+                mgrwtQ=True
+            elif "</mgrwt" in sline:
+                mgrwtQ=False                
+            elif not rwgtQ and not mgrwtQ:
                 sline2=sline.split()
                 particle=[int(sline2[0]),int(sline2[1]),int(sline2[2]),int(sline2[3]),\
                               int(sline2[4]),int(sline2[5]),float(sline2[6]),float(sline2[7]),\
@@ -496,8 +507,9 @@ inits[ninit0]=firstinit
 text='\n'.join(headers)+'\n'
 text=text+'\n'.join(inits)+'\n'
 text=text+'\n'.join(events)
+if '<LesHouchesEvents' in headers[0]: text=text+'\n</LesHouchesEvents>\n'
 
 stream=open(outfile,'w')
 stream.write(text)
 stream.close()
-print "INFO: The final produced lhe file is %s"%outfile
+print ("INFO: The final produced lhe file is %s"%outfile)

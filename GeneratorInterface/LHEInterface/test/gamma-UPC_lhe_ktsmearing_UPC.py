@@ -386,9 +386,8 @@ for i,file in enumerate(files):
                         raise Exception( "the beam information of the LHE files is not identical")
             elif iinit == 2:
                 procid=sline.split()[-1]
-                procpos=sline.index(' '+procid)
                 ilil=ilil+1
-                sline=sline[:procpos]+(' %d'%(offset+ilil))
+                sline=' '.join(sline.split()[:-1])+(' %d'%(offset+ilil))
                 proc_dict[procid]=offset+ilil
                 if i == 0:
                     inits.append(sline)

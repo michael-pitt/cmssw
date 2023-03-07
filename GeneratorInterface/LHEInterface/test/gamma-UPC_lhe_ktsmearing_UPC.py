@@ -370,7 +370,7 @@ for i,file in enumerate(files):
                     firstinit=sline
                     ninit0=len(inits)
                     inits.append(sline)
-                    firstinit=firstinit.rsplit(' ',1)[0]
+                    firstinit=' '.join(firstinit.split()[:-1])
                     ff=firstinit.strip().split()
                     PID_beam1=int(ff[0])
                     PID_beam2=int(ff[1])
@@ -378,10 +378,10 @@ for i,file in enumerate(files):
                     E_beam2=float(ff[3])
                     if abs(PID_beam1) != 2212 or abs(PID_beam2) != 2212:
                         raise ValueError( "Not a proton-proton collider")
-                    ninit1=int(sline.rsplit(' ',1)[-1])
+                    ninit1=int(sline.split()[-1])
                 else:
-                    ninit1=ninit1+int(sline.rsplit(' ',1)[-1])
-                    sline=sline.rsplit(' ',1)[0]
+                    ninit1=ninit1+int(sline.split()[-1])
+                    sline=' '.join(sline.split()[:-1])
                     if not sline == firstinit:
                         raise Exception( "the beam information of the LHE files is not identical")
             elif iinit == 2:

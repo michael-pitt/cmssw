@@ -324,12 +324,12 @@ void FSCAnalyzerHC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 	// add sums:
 	if(zside < 0){
 		fscDigi.sumMinus += charge;
-		if(section < 9) fscDigi.sumMinus_FSC2only += charge;
+		if(channel < 9) fscDigi.sumMinus_FSC2only += charge;
 		else fscDigi.sumMinus_FSC3only += charge;
 	}
 	else{
 		fscDigi.sumPlus += charge;
-		if(section < 9) fscDigi.sumPlus_FSC2only += charge;
+		if(channel < 9) fscDigi.sumPlus_FSC2only += charge;
 		else fscDigi.sumPlus_FSC3only += charge;
 	}
 	

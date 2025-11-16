@@ -72,6 +72,7 @@ private:
   // ----------member data ---------------------------
   const edm::EDGetTokenT<QIE10DigiCollection> ZDCDigiToken_;
   edm::ESGetToken<HcalDbService, HcalDbRecord> hcalDatabaseToken_;
+  bool doFullFitFSC_;
   bool do50nsRecoFSC_;
   bool doHardcodedFSC_;
   edm::Service<TFileService> fs;
@@ -122,13 +123,27 @@ namespace {
 FSCAnalyzerHC::FSCAnalyzerHC(const edm::ParameterSet& iConfig)
     : ZDCDigiToken_(consumes<QIE10DigiCollection>(iConfig.getParameter<edm::InputTag>("ZDCDigiSource"))),
       hcalDatabaseToken_(esConsumes<HcalDbService, HcalDbRecord>()),
+      doFullFitFSC_(iConfig.getParameter<bool>("doFullFitFSC")),
       do50nsRecoFSC_(iConfig.getParameter<bool>("do50nsRecoFSC")),
       doHardcodedFSC_(iConfig.getParameter<bool>("doHardcodedFSC")) {
 #ifdef THIS_IS_AN_EVENTSETUP_EXAMPLE
   setupDataToken_ = esConsumes<SetupData, SetupRecord>();
 #endif
-  //now do what ever initialization is needed
+    // ---- PROTECTION: user must choose exactly one method ----
+    int nSelected = (doFullFitFSC_ ? 1 : 0) + (do50nsRecoFSC_ ? 1 : 0);
+
+    if (nSelected != 1) {
+        throw cms::Exception("Configuration")
+            << "Invalid FSC charge reconstruction configuration:\n"
+            << "  doFullFitFSC = " << doFullFitFSC_ << "\n"
+            << "  do50nsRecoFSC = " << do50nsRecoFSC_ << "\n"
+            << "Exactly ONE of these must be set to True.\n"
+            << "Please fix the configuration and rerun.\n";
+    }
+
+    // now continue with other initialization…
 }
+
 
 FSCAnalyzerHC::~FSCAnalyzerHC() {
   // do anything here that needs to be done at desctruction time
@@ -227,6 +242,7 @@ void FSCAnalyzerHC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
 	float Q0 = fscDigi.chargefC[0][nhits] - ped, Q1 = fscDigi.chargefC[1][nhits] - ped;
 	float Q2 = fscDigi.chargefC[2][nhits] - ped, Q3 = fscDigi.chargefC[3][nhits] - ped;
+	float Q4 = fscDigi.chargefC[4][nhits] - ped, Q5 = fscDigi.chargefC[5][nhits] - ped;
 	float charge = 0;
 	
 	// Reconstruct the charge in Q2
@@ -294,21 +310,68 @@ void FSCAnalyzerHC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
         Q0 = static_cast<float>(bestB);	
 	}
 	else{ Q0 = 0; }
-	
-	// saturated signals goes here
-	if(fscDigi.adc[2][nhits]==255) { // TS2 saturated
-		if(fscDigi.adc[3][nhits]==255) { // TS3 saturated
-			Q2 = Q3 / f3v + ped;
-			saturation = 2;
+		
+	if (doFullFitFSC_) {
+
+		// ===== Full fit: TS2–TS5 optimal combination =====
+
+		if (fscDigi.adc[2][nhits] == 255) {          // TS2 saturated
+			if (fscDigi.adc[3][nhits] == 255) {      // TS3 saturated
+				if (fscDigi.adc[4][nhits] == 255) {  // TS4 saturated
+					// TS2–TS4 saturated → only TS5 available
+					Q2 = Q5 / f5v;
+
+					if (fscDigi.adc[5][nhits] == 255) { // TS5 saturated
+						saturation = 5;                 // TS2–TS5 saturated
+					} else {
+						saturation = 4;                 // TS2–TS4 saturated
+					}
+				}
+				else {
+					// TS2–TS3 saturated, TS4 OK → use TS4 & TS5
+					Q2 = (f4v * Q4 + f5v * Q5) / (f4v*f4v + f5v*f5v);
+					saturation = 3;
+				}
+			}
+			else {
+				// TS2 saturated, TS3 OK → use TS3–TS5
+				Q2 = (f3v * Q3 + f4v * Q4 + f5v * Q5) /
+					 (f3v*f3v + f4v*f4v + f5v*f5v);
+				saturation = 1;
+			}
 		}
-		else{
-			Q2 = (Q3 - Q0 * f5v) / f3v + ped;
-			saturation = 1;
+		else {
+			// TS2 not saturated → full optimal combination
+			Q2 = (Q2 + f3v * Q3 + f4v * Q4 + f5v * Q5) /
+				 (1.0f + f3v*f3v + f4v*f4v + f5v*f5v);
+			saturation = 0;
+		}
+
+	} else {
+
+		// subtract signal leackage from out-of-time pileup signal
+		Q2 -= Q0 * f4v;
+		Q3 -= Q0 * f5v;
+		
+		// ===== Reduced fit: ONLY TS2 and TS3  =====
+
+		if (fscDigi.adc[2][nhits] == 255) {   // TS2 saturated
+			Q2 = Q3 / f3v;
+
+			if (fscDigi.adc[3][nhits] == 255) { // TS3 saturated
+				saturation = 2;
+			}
+			else {
+				saturation = 1;
+			}
+		}
+		else {
+			Q2 = (Q2 + f3v * Q3) / (1.0f + f3v*f3v);
+			saturation = 0;
 		}
 	}
-	else{
-		Q2 = (Q2 + f3v * Q3) / (1.0f + f3v*f3v);
-	}
+
+
 	if(fscDigi.adc[0][nhits]==255) saturation +=10; // TS0 saturated
 	
 	// new calibrated charge

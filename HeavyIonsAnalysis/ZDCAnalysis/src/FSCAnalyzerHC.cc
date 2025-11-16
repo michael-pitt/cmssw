@@ -88,28 +88,29 @@ private:
 // constants, enums and typedefs
 //
 // This information is temrorarly stored here, once the sequence is validated it will be ported to the database
-// These numbers extracted on November 13, 2025. Any time timing calibration is applied, the F3, F4, F5 need to be updated
+// These numbers extracted on November 16, 2025 (run=399551). Any time timing calibration is applied, the F3, F4, F5 need to be updated
 namespace {
   // 2 sides (−, +) × NFSC channels
   constexpr float Pedestal[2][NFSC] = {
-    {1256.1f, 1287.21f, 1129.36f, 1216.32f, 1285.49f, 1169.89f}, // side minus
-    {1256.1f, 1287.21f, 1129.36f, 1216.32f, 1285.49f, 1169.89f}  // side plus
+    {1248.54f, 1287.14f, 1129.79f, 1216.63f, 1285.63f, 1170.79f}, // side minus
+    {1202.87f, 1199.81f, 1187.31f, 1218.55f, 1147.67f, 1231.52f}, // side plus
   };
 
   constexpr float f3[2][NFSC] = {
-    {0.530911f, 0.41923f, 0.568465f, 0.564356f, 0.663121f, 0.437691f},
-    {0.404952f, 0.367785f, 0.289732f, 0.28137f,  0.295755f, 0.288639f}
+    {0.485614f, 0.37147f, 0.431836f, 0.357515f, 0.432989f, 0.314054f}, // side minus
+    {0.40573f, 0.368565f, 0.239196f, 0.281138f, 0.295968f, 0.290039f}, // side plus
   };
 
   constexpr float f4[2][NFSC] = {
-    {0.203833f, 0.173217f, 0.172461f, 0.178248f, 0.204802f, 0.143328f},
-    {0.146871f, 0.136037f, 0.102299f, 0.102644f, 0.102658f, 0.105907f}
+    {0.191546f, 0.159452f, 0.142411f, 0.131297f, 0.154015f, 0.11559f}, // side minus
+    {0.145969f, 0.134359f, 0.0892946f, 0.101017f, 0.101158f, 0.1043f}, // side plus
   };
 
   constexpr float f5[2][NFSC] = {
-    {0.125581f, 0.106735f, 0.0923971f, 0.0920702f, 0.116749f, 0.0762132f},
-    {0.0850411f, 0.0786189f, 0.0595604f, 0.0607462f, 0.058937f, 0.0614747f}
+    {0.119143f, 0.0990354f, 0.080384f, 0.0701533f, 0.0912764f, 0.0629495f}, // side minus
+    {0.083688f, 0.0764629f, 0.0522635f, 0.0588876f, 0.0572844f, 0.0595602f}, // side plus
   };
+
 }  // namespace
 //
 // static data member definitions

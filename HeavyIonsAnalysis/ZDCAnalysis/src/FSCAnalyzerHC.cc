@@ -112,6 +112,11 @@ namespace {
     {0.083688f, 0.0764629f, 0.0522635f, 0.0588876f, 0.0572844f, 0.0595602f}, // side plus
   };
 
+  // pO pulse shape constants, uncomment in case if running on oxygen data (extracted from run=393953)
+  //constexpr float Pedestal[2][NFSC] = {{1240.81f, 1244.26f, 1129.9f, 1217.23f, 1279.97f, 1169.07f},{}};
+  //constexpr float f3[2][NFSC] = {{0.432071f, 0.37209f, 0.66697f, 0.679988f, 0.80187f, 0.483295f},{}};
+  //constexpr float f4[2][NFSC] = {{0.175788f, 0.159102f, 0.1914f, 0.199924f, 0.233085f, 0.150607f}, {}};
+  //constexpr float f5[2][NFSC] = {{0.110565f, 0.0990709f, 0.0991153f, 0.102377f, 0.129583f, 0.079309f},{}};
 }  // namespace
 //
 // static data member definitions

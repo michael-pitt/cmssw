@@ -380,13 +380,13 @@ void FSCAnalyzerHC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 	if(fscDigi.adc[0][nhits]==255) saturation +=10; // TS0 saturated
 	
 	// new calibrated charge
-	charge = Q2 * (1.0f + f3v*f3v + f4v*f4v + f5v*f5v);
+	charge = Q2 * (1.0f + f3v + f4v + f5v);
 	
 	fscDigi.Fitted_QTS0[nhits] = Q0 + ped;
 	fscDigi.Fitted_QTS2[nhits] = Q2 + ped;
 	fscDigi.saturation[nhits] = saturation;
 	fscDigi.charge[nhits] = charge;	
-	fscDigi.charge_bare[nhits] = (fscDigi.chargefC[2][nhits] - ped) * (1.0f + f3v*f3v + f4v*f4v + f5v*f5v);
+	fscDigi.charge_bare[nhits] = (fscDigi.chargefC[2][nhits] - ped) * (1.0f + f3v + f4v + f5v);
 	
     nhits++;
 	

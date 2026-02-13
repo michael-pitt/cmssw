@@ -81,6 +81,11 @@ private:
 
   int evtPlaneLevel_;
 
+  float minHFEnergy_;
+  float minAbsEtaHF_;
+  float maxAbsEtaHF_;
+
+
   edm::Service<TFileService> fs_;
 
   TTree* thi_;
@@ -183,7 +188,10 @@ HiEvtAnalyzer::HiEvtAnalyzer(const edm::ParameterSet& iConfig)
       doHFfilters_(iConfig.getParameter<bool>("doHFfilters")),
       useHepMC_(iConfig.getParameter<bool>("useHepMC")),
       doVertex_(iConfig.getParameter<bool>("doVertex")),
-      evtPlaneLevel_(iConfig.getParameter<int>("evtPlaneLevel")) {}
+      evtPlaneLevel_(iConfig.getParameter<int>("evtPlaneLevel")),
+	minHFEnergy_(iConfig.getUntrackedParameter<double>("minHFEnergy", 4.0)),
+	minAbsEtaHF_(iConfig.getUntrackedParameter<double>("minAbsEtaHF", 3.0)),
+	maxAbsEtaHF_(iConfig.getUntrackedParameter<double>("maxAbsEtaHF", 5.2)) {}
 
 HiEvtAnalyzer::~HiEvtAnalyzer() {
   // do anything here that needs to be done at desctruction time
@@ -338,11 +346,17 @@ void HiEvtAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
     for (const auto& pfcand : *pfCandidates) {
       if (pfcand.pdgId() != 1 && pfcand.pdgId() != 2) continue;
-      if (pfcand.et() < 0.0) continue;
-      const bool eta_plus = (pfcand.eta() > 3.0) && (pfcand.eta() < 6.0);
-      const bool eta_minus = (pfcand.eta() < -3.0) && (pfcand.eta() > -6.0);
-      if (!eta_plus && !eta_minus) continue;
-      const auto hfe = pfcand.energy();
+
+      const float eta = pfcand.eta();
+      const float absEta = std::abs(eta);
+      if (absEta < minAbsEtaHF_ || absEta > maxAbsEtaHF_) continue;
+
+      const float hfe  = pfcand.energy();
+      if (hfe < minHFEnergy_) continue;
+
+      const bool eta_plus = (eta > 0.f);
+      const bool eta_minus = !eta_plus;
+
       const auto hfet = pfcand.et();
       const auto hfid = pfcand.pdgId();
 
@@ -586,6 +600,11 @@ void HiEvtAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& description
   // Please change this to state exactly what you do use, even if it is no parameters
   edm::ParameterSetDescription desc;
   desc.setUnknown();
+
+  desc.addUntracked<double>("minHFEnergy", 4.0);
+  desc.addUntracked<double>("minAbsEtaHF", 3.0);
+  desc.addUntracked<double>("maxAbsEtaHF", 5.2);
+
   descriptions.addDefault(desc);
 }
 

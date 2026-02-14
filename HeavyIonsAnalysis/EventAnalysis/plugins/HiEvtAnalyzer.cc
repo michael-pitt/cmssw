@@ -600,11 +600,6 @@ void HiEvtAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& description
   // Please change this to state exactly what you do use, even if it is no parameters
   edm::ParameterSetDescription desc;
   desc.setUnknown();
-
-  desc.addUntracked<double>("minHFEnergy", 4.0);
-  desc.addUntracked<double>("minAbsEtaHF", 3.0);
-  desc.addUntracked<double>("maxAbsEtaHF", 5.2);
-
   descriptions.addDefault(desc);
 }
 

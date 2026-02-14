@@ -189,9 +189,9 @@ HiEvtAnalyzer::HiEvtAnalyzer(const edm::ParameterSet& iConfig)
       useHepMC_(iConfig.getParameter<bool>("useHepMC")),
       doVertex_(iConfig.getParameter<bool>("doVertex")),
       evtPlaneLevel_(iConfig.getParameter<int>("evtPlaneLevel")),
-	minHFEnergy_(iConfig.getUntrackedParameter<double>("minHFEnergy", 4.0)),
-	minAbsEtaHF_(iConfig.getUntrackedParameter<double>("minAbsEtaHF", 3.0)),
-	maxAbsEtaHF_(iConfig.getUntrackedParameter<double>("maxAbsEtaHF", 5.2)) {}
+      minHFEnergy_(iConfig.getParameter<double>("minHFEnergy")),
+      minAbsEtaHF_(iConfig.getParameter<double>("minAbsEtaHF")),
+      maxAbsEtaHF_(iConfig.getParameter<double>("maxAbsEtaHF")) {}
 
 HiEvtAnalyzer::~HiEvtAnalyzer() {
   // do anything here that needs to be done at desctruction time

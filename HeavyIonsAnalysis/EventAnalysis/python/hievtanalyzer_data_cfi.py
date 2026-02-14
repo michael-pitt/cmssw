@@ -19,7 +19,7 @@ hiEvtAnalyzer = cms.EDAnalyzer('HiEvtAnalyzer',
    doHFfilters      = cms.bool(True),
    evtPlaneLevel    = cms.int32(0),
 
-   minHFEnergy     = cms.untracked.double(4.0),
-   minAbsEtaHF     = cms.untracked.double(3.0),
-   maxAbsEtaHF     = cms.untracked.double(5.2),
+   minHFEnergy     = cms.double(0.0),
+   minAbsEtaHF     = cms.double(3.0),
+   maxAbsEtaHF     = cms.double(6.0),
 )

@@ -127,6 +127,9 @@ void VertexTableProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSe
       "score", pvsScoreProd.get(pvsIn.id(), 0), "main primary vertex score, i.e. sum pt2 of clustered objects", 8);
 
   float pv_sumpt2 = 0.0, pv_sumpx = 0.0, pv_sumpy = 0.0;
+  uint8_t main_ntrk0p5 = 0, main_ntrk0p9 = 0;
+  size_t nOther = (pvsIn->size() > 1) ? std::min<size_t>(pvsIn->size() - 1, 3) : 0;
+  std::vector<uint8_t> other_ntrk0p5(nOther, 0), other_ntrk0p9(nOther, 0); // Pre-size for extra PVs
   for (const auto& obj : *pfcIn) {
     if (obj.charge() == 0) {
       continue;
@@ -149,11 +152,33 @@ void VertexTableProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSe
       pv_sumpx += obj.px();
       pv_sumpy += obj.py();
     }
+	
+	// NEW track counting in the vicinity of 1mm around the vertex
+	double pt = obj.pt();
+	double eta = std::abs(obj.eta());
+	
+	if (eta < 2.1) {
+        // Main PV check (dz0 was calculated at the start of the loop)
+        if (dz < 0.1) {
+            if (pt > 0.5) main_ntrk0p5++;
+            if (pt > 0.9) main_ntrk0p9++;
+        }
+		
+		// Other PVs check (Iterate through the up to 3 extra vertices)
+		for (size_t i = 0; i < nOther; i++) { // Index i+1 because index 0 is the main PV
+			if (std::abs(obj.dz((*pvsIn)[i + 1].position())) < 0.1) {
+				if (pt > 0.5) other_ntrk0p5[i]++;
+				if (pt > 0.9) other_ntrk0p9[i]++;
+			}
+		}
+	}
   }
   pvTable->addColumnValue<float>(
       "sumpt2", pv_sumpt2, "sum pt2 of pf charged candidates for the main primary vertex", 10);
   pvTable->addColumnValue<float>("sumpx", pv_sumpx, "sum px of pf charged candidates for the main primary vertex", 10);
   pvTable->addColumnValue<float>("sumpy", pv_sumpy, "sum py of pf charged candidates for the main primary vertex", 10);
+  pvTable->addColumnValue<uint8_t>("ntrk0p5", main_ntrk0p5, "Number of tracks with pt > 0.5 GeV within 1mm dz of PV");
+  pvTable->addColumnValue<uint8_t>("ntrk0p9", main_ntrk0p9, "Number of tracks with pt > 0.9 GeV within 1mm dz of PV");
 
   auto otherPVsTable =
       std::make_unique<nanoaod::FlatTable>((*pvsIn).size() > 4 ? 3 : (*pvsIn).size() - 1, "Other" + pvName_, false);
@@ -165,6 +190,8 @@ void VertexTableProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSe
   }
   otherPVsTable->addColumn<float>("z", pvsz, "Z position of other primary vertices, excluding the main PV", 8);
   otherPVsTable->addColumn<float>("score", pvscores, "scores of other primary vertices, excluding the main PV", 8);
+  otherPVsTable->addColumn<uint8_t>("ntrk0p5", other_ntrk0p5, "Other PV track count: pt > 0.5, |eta| < 2.1, |dz| < 1mm");
+  otherPVsTable->addColumn<uint8_t>("ntrk0p9", other_ntrk0p9, "Other PV track count: pt > 0.9, |eta| < 2.1, |dz| < 1mm");
 
   const auto& svsProd = iEvent.get(svs_);
   auto selCandSv = std::make_unique<PtrVector<reco::VertexCompositePtrCandidate>>();

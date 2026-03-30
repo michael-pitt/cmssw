@@ -169,12 +169,12 @@ void ObjectTrackCountProducer::produce(edm::Event& iEvent, const edm::EventSetup
   for (const auto& e : elecs) { auto res = countFootprint(e, drLep_); e05.push_back(res.first); e09.push_back(res.second); }
   
   // Fill Tables
-  auto pvTab = std::make_unique<nanoaod::FlatTable>(1, "PV", true);
+  auto pvTab = std::make_unique<nanoaod::FlatTable>(1, "PV", true, true);
   pvTab->addColumnValue<int>("ntrk0p5", v05.at(0), "Total PV tracks pt>0.5");
   pvTab->addColumnValue<int>("ntrk0p9", v09.at(0), "Total PV tracks pt>0.9");
   
   size_t nOther = (v05.size() > 1) ? v05.size() - 1 : 0;
-  auto otherTab = std::make_unique<nanoaod::FlatTable>(nOther, "OtherPV", true);
+  auto otherTab = std::make_unique<nanoaod::FlatTable>(nOther, "OtherPV", false, true);
   std::vector<int> ov05(v05.begin() + 1, v05.end());
   std::vector<int> ov09(v09.begin() + 1, v09.end());
   if (nOther > 0) {
@@ -184,15 +184,15 @@ void ObjectTrackCountProducer::produce(edm::Event& iEvent, const edm::EventSetup
   otherTab->addColumn<int>("ntrk0p5", ov05, "Other PV tracks pt>0.5");
   otherTab->addColumn<int>("ntrk0p9", ov09, "Other PV tracks pt>0.9");
 
-  auto jetTab = std::make_unique<nanoaod::FlatTable>(jets.size(), "Jet", true);
+  auto jetTab = std::make_unique<nanoaod::FlatTable>(jets.size(), "Jet", false, true);
   jetTab->addColumn<int>("ntrk0p5", j05, "Jet track footprint pt>0.5");
   jetTab->addColumn<int>("ntrk0p9", j09, "Jet track footprint pt>0.9");
 
-  auto muonTab = std::make_unique<nanoaod::FlatTable>(muons.size(), "Muon", true);
+  auto muonTab = std::make_unique<nanoaod::FlatTable>(muons.size(), "Muon", false, true);
   muonTab->addColumn<int>("ntrk0p5", m05, "Muon track footprint pt>0.5");
   muonTab->addColumn<int>("ntrk0p9", m09, "Muon track footprint pt>0.9");
 
-  auto elecTab = std::make_unique<nanoaod::FlatTable>(elecs.size(), "Electron", true);
+  auto elecTab = std::make_unique<nanoaod::FlatTable>(elecs.size(), "Electron", false, true);
   elecTab->addColumn<int>("ntrk0p5", e05, "Elec track footprint pt>0.5");
   elecTab->addColumn<int>("ntrk0p9", e09, "Elec track footprint pt>0.9");
 

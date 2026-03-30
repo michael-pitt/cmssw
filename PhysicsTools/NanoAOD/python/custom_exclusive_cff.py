@@ -9,9 +9,9 @@ def customiseExclusive(process):
     # Define your producer and attach it to the process
     process.objectTrackCountTable = cms.EDProducer("ObjectTrackCountProducer",
         vtxs = cms.InputTag("offlineSlimmedPrimaryVertices"),
-        jets = cms.InputTag("slimmedJets"),
-        muons = cms.InputTag("slimmedMuons"),
-        electrons = cms.InputTag("slimmedElectrons"),
+        jets = cms.InputTag("linkedObjects", "jets"),
+        muons = cms.InputTag("linkedObjects", "muons"),
+        electrons = cms.InputTag("linkedObjects", "electrons"),
         pfcands = cms.InputTag("packedPFCandidates"),
         dzCut = cms.double(0.1),
         etaCut = cms.double(2.1),

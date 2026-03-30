@@ -7,7 +7,7 @@ def customiseExclusive(process):
     """
     
     # Define your producer and attach it to the process
-    process.objectTrackCount = cms.EDProducer("ObjectTrackCountProducer",
+    process.objectTrackCountTable = cms.EDProducer("ObjectTrackCountProducer",
         vtxs = cms.InputTag("offlineSlimmedPrimaryVertices"),
         jets = cms.InputTag("slimmedJets"),
         muons = cms.InputTag("slimmedMuons"),
@@ -19,12 +19,16 @@ def customiseExclusive(process):
         drLep = cms.double(0.3)
     )
 
-    # Add it to the standard NanoAOD Common Table Task
-    if hasattr(process, 'nanoTableTaskCommon'):
-        process.nanoTableTaskCommon.add(process.objectTrackCount)
+    if hasattr(process, 'nanoAOD_step'):
+        process.nanoAOD_step += process.objectTrackCountTable
     else:
-        # Fallback if running a very specific custom sequence
-        process.objectTrackCountTask = cms.Task(process.objectTrackCount)
+        # Fallback
+        process.objectTrackCountTask = cms.Task(process.objectTrackCountTable)
         process.schedule.associate(process.objectTrackCountTask)
+    
+    for output in ["NANOAODoutput", "NANOAODSIMoutput"]:
+        if hasattr(process, output):
+            out_module = getattr(process, output)
+            out_module.outputCommands.append("keep *_objectTrackCountTable_*_*")
 
     return process

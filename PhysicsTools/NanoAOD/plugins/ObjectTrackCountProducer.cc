@@ -92,6 +92,7 @@ ObjectTrackCountProducer::ObjectTrackCountProducer(const edm::ParameterSet& iCon
       drLep_(iConfig.getParameter<double>("drLep")) {
 
   produces<nanoaod::FlatTable>("pvTrk");
+  produces<nanoaod::FlatTable>("otherPVTrk");
   produces<nanoaod::FlatTable>("jetTrk");
   produces<nanoaod::FlatTable>("muonTrk");
   produces<nanoaod::FlatTable>("elecTrk");
@@ -111,7 +112,14 @@ void ObjectTrackCountProducer::produce(edm::Event& iEvent, const edm::EventSetup
   auto const& elecs = iEvent.get(elecToken_);
   auto const& pfcands = iEvent.get(pfcToken_);
   
-  if (vtxs.empty()) return;
+  if (vtxs.empty()) {
+      iEvent.put(std::make_unique<nanoaod::FlatTable>(0, "PV", true), "pvTrk");
+      iEvent.put(std::make_unique<nanoaod::FlatTable>(0, "OtherPV", true), "otherPVTrk");
+      iEvent.put(std::make_unique<nanoaod::FlatTable>(0, "Jet", true), "jetTrk");
+      iEvent.put(std::make_unique<nanoaod::FlatTable>(0, "Muon", true), "muonTrk");
+      iEvent.put(std::make_unique<nanoaod::FlatTable>(0, "Electron", true), "elecTrk");
+      return;
+  }
   const auto& pv0 = vtxs.front();
   
   // Count tracks for vertices:
@@ -166,23 +174,27 @@ void ObjectTrackCountProducer::produce(edm::Event& iEvent, const edm::EventSetup
   pvTab->addColumnValue<int>("ntrk0p9", v09.at(0), "Total PV tracks pt>0.9");
   
   size_t nOther = (v05.size() > 1) ? v05.size() - 1 : 0;
-  auto otherTab = std::make_unique<nanoaod::FlatTable>(nOther, "OtherPV", false);
+  auto otherTab = std::make_unique<nanoaod::FlatTable>(nOther, "OtherPV", true);
+  std::vector<int> ov05(v05.begin() + 1, v05.end());
+  std::vector<int> ov09(v09.begin() + 1, v09.end());
   if (nOther > 0) {
-	  std::vector<int> ov05(v05.begin() + 1, v05.end());
-	  std::vector<int> ov09(v09.begin() + 1, v09.end());
-	  otherTab->addColumn<int>("ntrk0p5", ov05, "Other PV tracks pt>0.5");
-	  otherTab->addColumn<int>("ntrk0p9", ov09, "Other PV tracks pt>0.9");
+	  ov05.assign(v05.begin() + 1, v05.end());
+	  ov09.assign(v09.begin() + 1, v09.end());
   }
+  otherTab->addColumn<int>("ntrk0p5", ov05, "Other PV tracks pt>0.5");
+  otherTab->addColumn<int>("ntrk0p9", ov09, "Other PV tracks pt>0.9");
 
-  auto jetTab = std::make_unique<nanoaod::FlatTable>(jets.size(), "Jet", false);
+  auto jetTab = std::make_unique<nanoaod::FlatTable>(jets.size(), "Jet", true);
   jetTab->addColumn<int>("ntrk0p5", j05, "Jet track footprint pt>0.5");
   jetTab->addColumn<int>("ntrk0p9", j09, "Jet track footprint pt>0.9");
 
-  auto muonTab = std::make_unique<nanoaod::FlatTable>(muons.size(), "Muon", false);
+  auto muonTab = std::make_unique<nanoaod::FlatTable>(muons.size(), "Muon", true);
   muonTab->addColumn<int>("ntrk0p5", m05, "Muon track footprint pt>0.5");
+  muonTab->addColumn<int>("ntrk0p9", m09, "Muon track footprint pt>0.9");
 
-  auto elecTab = std::make_unique<nanoaod::FlatTable>(elecs.size(), "Electron", false);
+  auto elecTab = std::make_unique<nanoaod::FlatTable>(elecs.size(), "Electron", true);
   elecTab->addColumn<int>("ntrk0p5", e05, "Elec track footprint pt>0.5");
+  elecTab->addColumn<int>("ntrk0p9", e09, "Elec track footprint pt>0.9");
 
   iEvent.put(std::move(pvTab),    "pvTrk");
   iEvent.put(std::move(otherTab), "otherPVTrk");

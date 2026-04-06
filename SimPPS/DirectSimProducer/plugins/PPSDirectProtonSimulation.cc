@@ -136,6 +136,8 @@ private:
 
   double pitchPixelsHor_;
   double pitchPixelsVer_;
+  
+  bool useVerticalCrossingAngle_;
 
   unsigned int verbosity_;
 
@@ -178,6 +180,8 @@ PPSDirectProtonSimulation::PPSDirectProtonSimulation(const edm::ParameterSet &iC
 
       pitchPixelsHor_(iConfig.getParameter<double>("pitchPixelsHor")),
       pitchPixelsVer_(iConfig.getParameter<double>("pitchPixelsVer")),
+	  
+	  useVerticalCrossingAngle_(iConfig.getParameter<bool>("useVerticalCrossingAngle")),
 
       verbosity_(iConfig.getUntrackedParameter<unsigned int>("verbosity", 0)) {
   if (produceScoringPlaneHits_)
@@ -236,6 +240,8 @@ void PPSDirectProtonSimulation::fillDescriptions(edm::ConfigurationDescriptions 
 
   desc.add<double>("pitchPixelsHor", 100.e-3);
   desc.add<double>("pitchPixelsVer", 150.e-3);
+  
+  desc.add<bool>("useVerticalCrossingAngle", false)->setComment("Apply crossing angle in the vertical plane (for 2025/2026 optics)");
 
   descriptions.add("ppsDirectProtonSimulation", desc);
 }
@@ -372,6 +378,7 @@ void PPSDirectProtonSimulation::processProton(
   double z_sign;
   double beamMomentum = 0.;
   double xangle = 0.;
+  double yangle = 0.;
   const std::unique_ptr<TF2> *empiricalAperture;
   if (mom_lhc.z() < 0)  // sector 45
   {
@@ -379,13 +386,21 @@ void PPSDirectProtonSimulation::processProton(
     z_sign = -1;
     beamMomentum = beamParameters.getBeamMom45();
     xangle = beamParameters.getHalfXangleX45();
+    yangle = beamParameters.getHalfXangleY45();
     empiricalAperture = &empiricalAperture45_;
   } else {  // sector 56
     arm = 1;
     z_sign = +1;
     beamMomentum = beamParameters.getBeamMom56();
     xangle = beamParameters.getHalfXangleX56();
+    yangle = beamParameters.getHalfXangleY56();
     empiricalAperture = &empiricalAperture56_;
+  }
+  
+  if (useVerticalCrossingAngle_) {
+      xangle = 0; // 2026/2025 Vertical Crossing (fix horizontal to zero)
+  } else {
+      yangle = 0; // Standard Horizontal Crossing (fix vertical to zero)
   }
 
   // calculate effective RP arrival time
@@ -402,7 +417,7 @@ void PPSDirectProtonSimulation::processProton(
   const double th_x_phys = mom_lhc.x() / p;
   const double th_y_phys = mom_lhc.y() / p;
   const double vtx_lhc_eff_x = vtx_lhc.x() - vtx_lhc.z() * (mom_lhc.x() / mom_lhc.z() + xangle);
-  const double vtx_lhc_eff_y = vtx_lhc.y() - vtx_lhc.z() * (mom_lhc.y() / mom_lhc.z());
+  const double vtx_lhc_eff_y = vtx_lhc.y() - vtx_lhc.z() * (mom_lhc.y() / mom_lhc.z() + yangle);
 
   if (verbosity_) {
     ssLog << "simu: xi = " << xi << ", th_x_phys = " << th_x_phys << ", th_y_phys = " << th_y_phys

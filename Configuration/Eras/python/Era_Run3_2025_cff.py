@@ -10,5 +10,6 @@ from Configuration.Eras.Modifier_run3_scouting_2025_cff import run3_scouting_202
 from Configuration.ProcessModifiers.ecal_cctiming_cff import ecal_cctiming
 from Configuration.ProcessModifiers.siPixelGoodEdgeAlgo_cff import siPixelGoodEdgeAlgo
 from Configuration.ProcessModifiers.siPixelDigiMorphing_cff import siPixelDigiMorphing
+from Configuration.Eras.Modifier_ctpps_2025_cff import ctpps_2025
 
-Run3_2025 = cms.ModifierChain(Run3_2024, run3_GEM_2025, stage2L1Trigger_2025, run3_SiPixel_2025, run3_CSC_2025_FtoG, run3_nanoAOD_2025, run3_scouting_2025, ecal_cctiming, siPixelGoodEdgeAlgo, siPixelDigiMorphing)
+Run3_2025 = cms.ModifierChain(Run3_2024, run3_GEM_2025, stage2L1Trigger_2025, run3_SiPixel_2025, run3_CSC_2025_FtoG, run3_nanoAOD_2025, run3_scouting_2025, ecal_cctiming, siPixelGoodEdgeAlgo, siPixelDigiMorphing, ctpps_2025)

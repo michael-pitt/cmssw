@@ -48,7 +48,20 @@ def _modify2022(process):
         # replaced by the composite ESSource
         delattr(process, 'ctppsGeometryESModule')
 
+def _modify2025(process):
+    print('Process customised for 2025/2026 PPS era')
+    process.load('SimPPS.DirectSimProducer.simPPS2025_cfi')
+    if hasattr(process, 'generator'):
+        process.generator.energy = process.profile_2025_default.ctppsLHCInfo.beamEnergy
+    if hasattr(process, 'ctppsGeometryESModule'):
+        # replaced by the composite ESSource
+        delattr(process, 'ctppsGeometryESModule')
+    if hasattr(process, 'ppsDirectProtonSimulation'):
+        process.ppsDirectProtonSimulation.useVerticalCrossingAngle = cms.bool(True)
+
+
 modifyConfigurationStandardSequencesFor2016_ = eras.ctpps_2016.makeProcessModifier(_modify2016)
 modifyConfigurationStandardSequencesFor2017_ = eras.ctpps_2017.makeProcessModifier(_modify2017)
 modifyConfigurationStandardSequencesFor2018_ = eras.ctpps_2018.makeProcessModifier(_modify2018)
 modifyConfigurationStandardSequencesFor2022_ = eras.ctpps_2022.makeProcessModifier(_modify2022)
+modifyConfigurationStandardSequencesFor2025_ = eras.ctpps_2025.makeProcessModifier(_modify2025)

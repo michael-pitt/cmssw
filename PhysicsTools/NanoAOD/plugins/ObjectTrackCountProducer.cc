@@ -65,7 +65,8 @@ private:
   const double dzCut_;
   const double etaCut_;
   const double drJet_;
-  const double drLep_;  
+  const double drEl_;  
+  const double drMu_;  
 
 };
 
@@ -89,7 +90,8 @@ ObjectTrackCountProducer::ObjectTrackCountProducer(const edm::ParameterSet& iCon
       dzCut_(iConfig.getParameter<double>("dzCut")),
       etaCut_(iConfig.getParameter<double>("etaCut")),
       drJet_(iConfig.getParameter<double>("drJet")),
-      drLep_(iConfig.getParameter<double>("drLep")) {
+      drEl_(iConfig.getParameter<double>("drEl")),
+      drMu_(iConfig.getParameter<double>("drMu")) {
 
   produces<nanoaod::FlatTable>("pvTrk");
   produces<nanoaod::FlatTable>("otherPVTrk");
@@ -131,6 +133,9 @@ void ObjectTrackCountProducer::produce(edm::Event& iEvent, const edm::EventSetup
 	  int n05 = 0, n09 = 0;
 	  for (const auto& pfc : pfcands) {
         if (pfc.charge() == 0 || pfc.pt() < 0.5 || std::abs(pfc.eta()) > etaCut_) continue;
+		
+		// track - vertex association (NoPV = 0, PVLoose = 1, PVTight = 2, PVUsedInFit = 3):
+		if (pfc.fromPV(i)<pat::PackedCandidate::PVTight) continue;
       
         // Master dZ cut relative to THIS specific vertex (v)
         if (std::abs(pfc.dz(v.position())) < dzCut_) {
@@ -149,10 +154,13 @@ void ObjectTrackCountProducer::produce(edm::Event& iEvent, const edm::EventSetup
     for (const auto& pfc : pfcands) {
       if (pfc.charge() == 0 || pfc.pt() < 0.5) continue;
 	  
-      // The Master dZ Cut (Always applied)
+      // Require association to the primary vertex
+	  if (pfc.fromPV(0)<pat::PackedCandidate::PVTight) continue;
+	  
+	  // The Master dz Cut
 	  if (std::abs(pfc.dz(pv0.position())) >= dzCut_) continue;
 	  
-	  // Reject tracjs within a dR Cut from the object
+	  // Reject tracks outside a dR cone from the object
       if (reco::deltaR(obj, pfc) >= dRMax) continue;
 	  
 	  // Counter
@@ -165,8 +173,8 @@ void ObjectTrackCountProducer::produce(edm::Event& iEvent, const edm::EventSetup
   // Process Collections
   std::vector<int> j05, j09, m05, m09, e05, e09;
   for (const auto& j : jets) { auto res = countFootprint(j, drJet_); j05.push_back(res.first); j09.push_back(res.second); }
-  for (const auto& m : muons) { auto res = countFootprint(m, drLep_); m05.push_back(res.first); m09.push_back(res.second); }
-  for (const auto& e : elecs) { auto res = countFootprint(e, drLep_); e05.push_back(res.first); e09.push_back(res.second); }
+  for (const auto& m : muons) { auto res = countFootprint(m, drMu_); m05.push_back(res.first); m09.push_back(res.second); }
+  for (const auto& e : elecs) { auto res = countFootprint(e, drEl_); e05.push_back(res.first); e09.push_back(res.second); }
   
   // Fill Tables
   auto pvTab = std::make_unique<nanoaod::FlatTable>(1, "PV", true, true);
@@ -251,7 +259,8 @@ void ObjectTrackCountProducer::fillDescriptions(edm::ConfigurationDescriptions& 
   desc.add<double>("dzCut", 0.1);
   desc.add<double>("etaCut", 2.1);
   desc.add<double>("drJet", 0.4);
-  desc.add<double>("drLep", 0.3);
+  desc.add<double>("drEl", 0.2);
+  desc.add<double>("drMu", 0.1);
   
   descriptions.addWithDefaultLabel(desc);
 }

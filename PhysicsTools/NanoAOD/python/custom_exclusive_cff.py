@@ -16,7 +16,8 @@ def customiseExclusive(process):
         dzCut = cms.double(0.1),
         etaCut = cms.double(2.1),
         drJet = cms.double(0.4),
-        drLep = cms.double(0.3)
+        drEl = cms.double(0.2),
+        drMu = cms.double(0.1),
     )
 
     if hasattr(process, 'nanoAOD_step'):

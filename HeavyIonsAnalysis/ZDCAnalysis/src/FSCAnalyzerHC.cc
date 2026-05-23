@@ -90,7 +90,7 @@ private:
 //
 // This information is temrorarly stored here, once the sequence is validated it will be ported to the database
 namespace {
-  // These numbers extracted on May 23, 2026 (run=404518). Any time timing calibration is applied, the F3, F4, F5 need to be updated
+  // These numbers extracted on May 23, 2026 (run=404186). Any time timing calibration is applied, the F3, F4, F5 need to be updated
   // 2 sides (−, +) × NFSC channels
   constexpr float Pedestal[2][NFSC] = {
     {1219.87f, 1271.12f, 1127.33f, 1217.13f, 1279.15f, 1169.95f}, // side minus

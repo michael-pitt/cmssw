@@ -62,6 +62,7 @@ private:
   const edm::EDGetTokenT<pat::ElectronCollection> elecToken_;
   const edm::EDGetTokenT<pat::PackedCandidateCollection> pfcToken_;
 
+  const double dzOutCut_;
   const double dzCut_;
   const double etaCut_;
   const double drJet_;
@@ -87,6 +88,7 @@ ObjectTrackCountProducer::ObjectTrackCountProducer(const edm::ParameterSet& iCon
       muonToken_(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons"))),
       elecToken_(consumes<pat::ElectronCollection>(iConfig.getParameter<edm::InputTag>("electrons"))),
       pfcToken_(consumes<pat::PackedCandidateCollection>(iConfig.getParameter<edm::InputTag>("pfcands"))),
+      dzOutCut_(iConfig.getParameter<double>("dzOutCut")),
       dzCut_(iConfig.getParameter<double>("dzCut")),
       etaCut_(iConfig.getParameter<double>("etaCut")),
       drJet_(iConfig.getParameter<double>("drJet")),
@@ -123,16 +125,24 @@ void ObjectTrackCountProducer::produce(edm::Event& iEvent, const edm::EventSetup
       return;
   }
   const auto& pv0 = vtxs.front();
-  
+
   // Count tracks for vertices:
   std::vector<int> v05, v09;
+  std::vector<int> vOut05, vOut09;
   size_t nVtxToProcess = std::min<size_t>(vtxs.size(), 4);
   
   for (size_t i = 0; i < nVtxToProcess; ++i) {
 	  const auto& v = vtxs[i];
 	  int n05 = 0, n09 = 0;
+	  int nOut05 = 0, nOut09 = 0;
 	  for (const auto& pfc : pfcands) {
         if (pfc.charge() == 0 || pfc.pt() < 0.5 || std::abs(pfc.eta()) > etaCut_) continue;
+		
+		// Count tracks that are strictly OUTSIDE the main interaction window
+		if (std::abs(pfc.dz(v.position())) > dzOutCut_) {
+			nOut05++;
+			if (pfc.pt() > 0.9) nOut09++;
+		}
 		
 		// track - vertex association (NoPV = 0, PVLoose = 1, PVTight = 2, PVUsedInFit = 3):
 		if (pfc.fromPV(i)<pat::PackedCandidate::PVTight) continue;
@@ -145,6 +155,8 @@ void ObjectTrackCountProducer::produce(edm::Event& iEvent, const edm::EventSetup
       }
 	  v05.push_back(n05);
 	  v09.push_back(n09);
+	  vOut05.push_back(nOut05);
+	  vOut09.push_back(nOut09);
   }
   
   
@@ -180,17 +192,25 @@ void ObjectTrackCountProducer::produce(edm::Event& iEvent, const edm::EventSetup
   auto pvTab = std::make_unique<nanoaod::FlatTable>(1, "PV", true, true);
   pvTab->addColumnValue<int>("ntrk0p5", v05.at(0), "Total PV tracks pt>0.5");
   pvTab->addColumnValue<int>("ntrk0p9", v09.at(0), "Total PV tracks pt>0.9");
+  pvTab->addColumnValue<int>("nPUtrk0p5", vOut05.at(0), "Total PV tracks pt>0.5 outside |dz| > 2cm from PV0");
+  pvTab->addColumnValue<int>("nPUtrk0p9", vOut09.at(0), "Total PV tracks pt>0.9 outside |dz| > 2cm from PV0");
   
   size_t nOther = (v05.size() > 1) ? v05.size() - 1 : 0;
   auto otherTab = std::make_unique<nanoaod::FlatTable>(nOther, "OtherPV", false, true);
   std::vector<int> ov05(v05.begin() + 1, v05.end());
   std::vector<int> ov09(v09.begin() + 1, v09.end());
+  std::vector<int> ovOut05(vOut05.begin() + 1, vOut05.end());
+  std::vector<int> ovOut09(vOut09.begin() + 1, vOut09.end());
   if (nOther > 0) {
 	  ov05.assign(v05.begin() + 1, v05.end());
 	  ov09.assign(v09.begin() + 1, v09.end());
+	  ovOut05.assign(vOut05.begin() + 1, vOut05.end());
+	  ovOut09.assign(vOut09.begin() + 1, vOut09.end());
   }
   otherTab->addColumn<int>("ntrk0p5", ov05, "Other PV tracks pt>0.5");
   otherTab->addColumn<int>("ntrk0p9", ov09, "Other PV tracks pt>0.9");
+  otherTab->addColumn<int>("nPUtrk0p5", ovOut05, "Other PV tracks pt>0.5 outside |dz| > 2cm from PV");
+  otherTab->addColumn<int>("nPUtrk0p9", ovOut09, "Other PV tracks pt>0.9 outside |dz| > 2cm from PV");
 
   auto jetTab = std::make_unique<nanoaod::FlatTable>(jets.size(), "Jet", false, true);
   jetTab->addColumn<int>("ntrk0p5", j05, "Jet track footprint pt>0.5");
@@ -256,6 +276,7 @@ void ObjectTrackCountProducer::fillDescriptions(edm::ConfigurationDescriptions& 
   desc.add<edm::InputTag>("pfcands", edm::InputTag("packedPFCandidates"));
   
   // Define default values here
+  desc.add<double>("dzOutCut", 0.2);
   desc.add<double>("dzCut", 0.1);
   desc.add<double>("etaCut", 2.1);
   desc.add<double>("drJet", 0.4);

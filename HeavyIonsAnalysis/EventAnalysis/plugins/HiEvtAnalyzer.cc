@@ -81,9 +81,9 @@ private:
 
   int evtPlaneLevel_;
 
-  float minHFEnergy_;
-  float minAbsEtaHF_;
-  float maxAbsEtaHF_;
+  float minHFEnergy_pf_;
+  float minAbsEtaHF_pf_;
+  float maxAbsEtaHF_pf_;
 
 
   edm::Service<TFileService> fs_;
@@ -189,9 +189,9 @@ HiEvtAnalyzer::HiEvtAnalyzer(const edm::ParameterSet& iConfig)
       useHepMC_(iConfig.getParameter<bool>("useHepMC")),
       doVertex_(iConfig.getParameter<bool>("doVertex")),
       evtPlaneLevel_(iConfig.getParameter<int>("evtPlaneLevel")),
-      minHFEnergy_(iConfig.getParameter<double>("minHFEnergy")),
-      minAbsEtaHF_(iConfig.getParameter<double>("minAbsEtaHF")),
-      maxAbsEtaHF_(iConfig.getParameter<double>("maxAbsEtaHF")) {}
+      minHFEnergy_pf_(iConfig.getParameter<double>("minHFEnergy_pf")),
+      minAbsEtaHF_pf_(iConfig.getParameter<double>("minAbsEtaHF_pf")),
+      maxAbsEtaHF_pf_(iConfig.getParameter<double>("maxAbsEtaHF_pf")) {}
 
 HiEvtAnalyzer::~HiEvtAnalyzer() {
   // do anything here that needs to be done at desctruction time
@@ -349,10 +349,10 @@ void HiEvtAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
       const float eta = pfcand.eta();
       const float absEta = std::abs(eta);
-      if (absEta < minAbsEtaHF_ || absEta > maxAbsEtaHF_) continue;
+      if (absEta < minAbsEtaHF_pf_ || absEta > maxAbsEtaHF_pf_) continue;
 
       const float hfe  = pfcand.energy();
-      if (hfe < minHFEnergy_) continue;
+      if (hfe < minHFEnergy_pf_) continue;
 
       const bool eta_plus = (eta > 0.f);
       const bool eta_minus = !eta_plus;

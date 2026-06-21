@@ -49,7 +49,7 @@ if singleRPProtons: protonTablesTask.add(singleRPTable)
 
 # GEN-level signal/PU protons collection
 genProtonTable = _genproton.clone(
-    cut = cms.string('(pdgId == 2212) && (abs(pz) > 5200) && (abs(pz) < 6467.5)') # xi in [0.015, 0.2]
+    cut = cms.string('(pdgId == 2212) && (abs(pz) > 5440.0) && (abs(pz) < 6698.0)') # xi in [0.015, 0.2]
 )
 
 genProtonTablesTask = cms.Task(genProtonTable)
